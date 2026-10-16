@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffdd2d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="FINДНЕВНИК" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>FINДНЕВНИК</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">ЛИЧНЫЕ РАСХОДЫ</div>
+        <h1>FINДНЕВНИК</h1>
+      </div>
+      <button class="icon-button" id="undoBtn" aria-label="Отменить последний расход" title="Отменить последний расход">↩</button>
+    </header>
+
+    <main>
+      <section class="view active" id="view-home">
+        <div class="hero-card">
+          <div>
+            <div class="muted">Расходы за текущий месяц</div>
+            <div class="hero-total" id="homeMonthTotal">0 ₽</div>
+          </div>
+          <div class="hero-month" id="homeMonthLabel"></div>
+        </div>
+
+        <div class="section-title-row">
+          <h2>Добавить расход</h2>
+          <span class="muted small">2–3 нажатия</span>
+        </div>
+        <div class="category-grid" id="categoryGrid"></div>
+
+        <div class="quick-card">
+          <div class="quick-title">Быстрый ввод ЕДА</div>
+          <div class="muted small">Например: <b>350 ком 16.10 обед</b></div>
+          <div class="quick-row">
+            <input id="quickFoodInput" inputmode="text" placeholder="350 ком 16.10" autocomplete="off" />
+            <button class="primary compact" id="quickFoodAddBtn">Добавить</button>
+          </div>
+        </div>
+
+        <div class="recent-block">
+          <div class="section-title-row">
+            <h2>Последние</h2>
+            <button class="text-button" data-nav="history">Вся история</button>
+          </div>
+          <div id="recentList" class="transaction-list"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-history">
+        <div class="section-title-row sticky-title">
+          <h2>История</h2>
+          <button class="secondary compact" id="resetFiltersBtn">Сбросить</button>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-grid">
+            <label>
+              <span>Поиск</span>
+              <input id="filterQuery" placeholder="кофе, такси, обед…" />
+            </label>
+            <label>
+              <span>Категория</span>
+              <select id="filterCategory"></select>
+            </label>
+            <label>
+              <span>Месяц</span>
+              <input id="filterMonth" type="month" />
+            </label>
+            <label>
+              <span>С даты</span>
+              <input id="filterDateFrom" type="date" />
+            </label>
+            <label>
+              <span>По дату</span>
+              <input id="filterDateTo" type="date" />
+            </label>
+            <label>
+              <span>Мин. сумма</span>
+              <input id="filterMin" inputmode="decimal" placeholder="0" />
+            </label>
+            <label>
+              <span>Макс. сумма</span>
+              <input id="filterMax" inputmode="decimal" placeholder="∞" />
+            </label>
+            <label class="check-label full-row">
+              <input id="filterCompOnly" type="checkbox" />
+              <span>Только КОМ</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="history-summary" id="historySummary"></div>
+        <div id="historyList" class="transaction-list"></div>
+      </section>
+
+      <section class="view" id="view-report">
+        <div class="month-toolbar">
+          <button class="icon-button" id="prevMonthBtn">‹</button>
+          <div class="month-center">
+            <div class="eyebrow">ОТЧЁТ</div>
+            <input type="month" id="reportMonth" />
+          </div>
+          <button class="icon-button" id="nextMonthBtn">›</button>
+        </div>
+
+        <div class="report-total-card">
+          <div class="muted">ИТОГО</div>
+          <div class="report-total" id="reportTotal">0 ₽</div>
+          <div class="muted small" id="reportMonthTitle"></div>
+        </div>
+
+        <div id="reportCategoryCards" class="report-category-list"></div>
+        <div id="compensationReport"></div>
+
+        <details class="detail-panel" open>
+          <summary>Подробно по операциям</summary>
+          <div id="reportDetails"></div>
+        </details>
+      </section>
+
+      <section class="view" id="view-more">
+        <h2>Ещё</h2>
+
+        <div class="menu-card">
+          <button class="menu-row" id="subscriptionsBtn">
+            <span><b>🔁 Подписки</b><small>Регулярные списания</small></span><span>›</span>
+          </button>
+          <button class="menu-row" id="exportCsvBtn">
+            <span><b>📊 Экспорт CSV</b><small>Для Excel</small></span><span>›</span>
+          </button>
+          <button class="menu-row" id="exportJsonBtn">
+            <span><b>💾 Резервная копия JSON</b><small>Полное сохранение данных</small></span><span>›</span>
+          </button>
+          <label class="menu-row file-row">
+            <span><b>♻️ Восстановить из JSON</b><small>Полностью заменит текущие данные</small></span><span>›</span>
+            <input id="importJsonInput" type="file" accept="application/json,.json" hidden />
+          </label>
+        </div>
+
+        <div class="info-card">
+          <b>Локальное хранение</b>
+          <p>Данные находятся только на этом устройстве. Сервер, аккаунт и синхронизация не используются.</p>
+        </div>
+
+        <div class="info-card">
+          <b>Установка на iPhone</b>
+          <p>Открой сайт в Safari → «Поделиться» → «На экран “Домой”». После первого открытия приложение работает офлайн.</p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Навигация">
+      <button class="nav-item active" data-nav="home"><span>⌂</span><small>Главная</small></button>
+      <button class="nav-item" data-nav="history"><span>≡</span><small>История</small></button>
+      <button class="nav-item" data-nav="report"><span>▥</span><small>Отчёт</small></button>
+      <button class="nav-item" data-nav="more"><span>•••</span><small>Ещё</small></button>
+    </nav>
+  </div>
+
+  <dialog id="expenseDialog" class="sheet-dialog">
+    <form method="dialog" id="expenseForm" class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <div class="eyebrow" id="expenseModeLabel">НОВЫЙ РАСХОД</div>
+          <h2 id="expenseTitle">Расход</h2>
+        </div>
+        <button type="button" class="icon-button" id="closeExpenseDialog">×</button>
+      </div>
+
+      <input type="hidden" id="expenseId" />
+
+      <label class="field big-money-field">
+        <span>Сумма</span>
+        <div class="money-input-wrap">
+          <input id="expenseAmount" inputmode="decimal" placeholder="0" required />
+          <b>₽</b>
+        </div>
+      </label>
+
+      <label class="field">
+        <span>Категория</span>
+        <select id="expenseCategory"></select>
+      </label>
+
+      <div class="two-col">
+        <label class="field">
+          <span>Дата</span>
+          <input id="expenseDate" type="date" required />
+        </label>
+        <label class="field">
+          <span>Время</span>
+          <input id="expenseTime" type="time" required />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Комментарий</span>
+        <input id="expenseComment" placeholder="необязательно" autocomplete="off" />
+      </label>
+
+      <label class="comp-toggle" id="compToggleRow">
+        <input id="expenseComp" type="checkbox" />
+        <span class="switch"></span>
+        <span>
+          <b>Компенсация от работы</b>
+          <small>1 400 ₽ в день, налог 13% с покрытой суммы</small>
+        </span>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" class="danger hidden" id="deleteExpenseBtn">Удалить</button>
+        <button type="submit" class="primary grow">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="subscriptionsDialog" class="sheet-dialog">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div><div class="eyebrow">РЕГУЛЯРНЫЕ</div><h2>Подписки</h2></div>
+        <button class="icon-button" id="closeSubscriptionsDialog">×</button>
+      </div>
+      <div id="subscriptionsList" class="subscription-list"></div>
+      <button class="primary full" id="addSubscriptionBtn">+ Добавить подписку</button>
+    </div>
+  </dialog>
+
+  <dialog id="subscriptionEditDialog" class="sheet-dialog">
+    <form method="dialog" id="subscriptionForm" class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div><div class="eyebrow">ПОДПИСКА</div><h2 id="subscriptionFormTitle">Новая</h2></div>
+        <button type="button" class="icon-button" id="closeSubscriptionEditDialog">×</button>
+      </div>
+      <input type="hidden" id="subscriptionId" />
+      <label class="field"><span>Название</span><input id="subscriptionName" required placeholder="iCloud" /></label>
+      <label class="field"><span>Сумма, ₽</span><input id="subscriptionAmount" inputmode="decimal" required placeholder="199" /></label>
+      <label class="field"><span>Число месяца</span><input id="subscriptionDay" type="number" min="1" max="31" required placeholder="12" /></label>
+      <label class="check-label"><input id="subscriptionActive" type="checkbox" checked /><span>Активна</span></label>
+      <div class="dialog-actions">
+        <button type="button" class="danger hidden" id="deleteSubscriptionBtn">Удалить</button>
+        <button type="submit" class="primary grow">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="logic.js"></script>
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
