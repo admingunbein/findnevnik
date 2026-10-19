@@ -180,13 +180,17 @@
 
       <input type="hidden" id="expenseId" />
 
-      <label class="field big-money-field">
-        <span>Сумма</span>
-        <div class="money-input-wrap">
-          <input id="expenseAmount" inputmode="decimal" placeholder="0" required />
-          <b>₽</b>
-        </div>
-      </label>
+      <div class="expense-entry-row">
+        <label class="field expense-entry-field">
+          <span>Сумма и комментарий</span>
+          <input id="expenseAmount" type="text" inputmode="text" placeholder="350 обед" autocomplete="off" required />
+        </label>
+        <label class="comp-toggle" id="compToggleRow" title="Компенсация от работы: 1 400 ₽ в день, налог 13% с покрытой суммы">
+          <input id="expenseComp" type="checkbox" aria-label="КОМ — компенсация от работы" />
+          <span class="switch" aria-hidden="true"></span>
+          <b>КОМ</b>
+        </label>
+      </div>
 
       <label class="field">
         <span>Категория</span>
@@ -203,20 +207,6 @@
           <input id="expenseTime" type="time" required />
         </label>
       </div>
-
-      <label class="field">
-        <span>Комментарий</span>
-        <input id="expenseComment" placeholder="необязательно" autocomplete="off" />
-      </label>
-
-      <label class="comp-toggle" id="compToggleRow">
-        <input id="expenseComp" type="checkbox" />
-        <span class="switch"></span>
-        <span>
-          <b>Компенсация от работы</b>
-          <small>1 400 ₽ в день, налог 13% с покрытой суммы</small>
-        </span>
-      </label>
 
       <div class="dialog-actions">
         <button type="button" class="danger hidden" id="deleteExpenseBtn">Удалить</button>

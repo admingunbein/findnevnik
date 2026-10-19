@@ -105,11 +105,25 @@
     }
   }
 
+  function fitHomeTotal() {
+    const total = $('homeMonthTotal');
+    if (!total.clientWidth) return;
+    total.style.fontSize = '';
+    const baseSize = parseFloat(getComputedStyle(total).fontSize);
+    const range = document.createRange();
+    range.selectNodeContents(total);
+    const textWidth = range.getBoundingClientRect().width;
+    if (textWidth > total.clientWidth) {
+      total.style.fontSize = `${Math.floor(baseSize * total.clientWidth / textWidth * 10) / 10}px`;
+    }
+  }
+
   function renderHome() {
     const month = L.currentLocalDate().slice(0, 7);
     const summary = L.summarizeMonth(expenses, month);
     $('homeMonthTotal').textContent = L.formatMoney(summary.total);
     $('homeMonthLabel').textContent = L.monthTitle(month);
+    requestAnimationFrame(fitHomeTotal);
 
     $('categoryGrid').innerHTML = Object.entries(L.CATEGORIES).map(([key, c]) => `
       <button class="category-btn" data-add-category="${key}">
@@ -216,7 +230,6 @@
     $('expenseCategory').innerHTML = categoryOptions(category);
     $('expenseDate').value = L.currentLocalDate();
     $('expenseTime').value = L.currentLocalTime();
-    $('expenseComment').value = '';
     $('expenseComp').checked = false;
     $('deleteExpenseBtn').classList.add('hidden');
     updateCompVisibility();
@@ -230,12 +243,11 @@
     $('expenseModeLabel').textContent = 'РЕДАКТИРОВАНИЕ';
     $('expenseTitle').textContent = 'Операция';
     $('expenseId').value = e.id;
-    $('expenseAmount').value = (e.amountKopeks / 100).toFixed(e.amountKopeks % 100 ? 2 : 0).replace('.', ',');
+    $('expenseAmount').value = (e.amountKopeks / 100).toFixed(e.amountKopeks % 100 ? 2 : 0).replace('.', ',') + (e.comment ? ` ${e.comment}` : '');
     $('expenseCategory').innerHTML = categoryOptions(e.category);
     const [datePart, timePart = '12:00'] = e.spentAt.split('T');
     $('expenseDate').value = datePart;
     $('expenseTime').value = timePart.slice(0, 5);
-    $('expenseComment').value = e.comment || '';
     $('expenseComp').checked = !!e.isComp;
     $('deleteExpenseBtn').classList.remove('hidden');
     updateCompVisibility();
@@ -249,9 +261,9 @@
   }
 
   async function saveExpenseForm() {
-    const amountKopeks = L.parseMoneyToKopeks($('expenseAmount').value);
-    if (!amountKopeks) {
-      showToast('Проверь сумму');
+    const parsed = L.parseExpenseInput($('expenseAmount').value);
+    if (!parsed) {
+      showToast('Укажи сумму в начале, например: 350 обед');
       return false;
     }
     const id = $('expenseId').value ? Number($('expenseId').value) : null;
@@ -260,8 +272,8 @@
     const record = {
       ...(old || {}),
       category,
-      amountKopeks,
-      comment: $('expenseComment').value.trim(),
+      amountKopeks: parsed.amountKopeks,
+      comment: parsed.comment,
       spentAt: L.makeLocalDateTime($('expenseDate').value, $('expenseTime').value),
       isComp: category === 'food' ? $('expenseComp').checked : false,
       source: old?.source || 'manual',
@@ -497,6 +509,8 @@
     await processRecurringSubscriptions();
     await refreshData();
     renderAll();
+
+    new ResizeObserver(fitHomeTotal).observe($('homeMonthTotal').parentElement);
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.error));

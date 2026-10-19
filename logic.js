@@ -49,6 +49,16 @@
     return Math.round(value * 100);
   }
 
+  // The first token is the amount; all following text stays a comment,
+  // including numbers, dates and the word «ком».
+  function parseExpenseInput(text) {
+    const match = String(text || '').trim().match(/^(\d+(?:[.,]\d{1,2})?)(?:\s+([\s\S]*))?$/);
+    if (!match) return null;
+    const amountKopeks = parseMoneyToKopeks(match[1]);
+    if (!amountKopeks || !Number.isSafeInteger(amountKopeks)) return null;
+    return { amountKopeks, comment: (match[2] || '').trim() };
+  }
+
   function formatMoney(kopeks) {
     const sign = kopeks < 0 ? '-' : '';
     const abs = Math.abs(Math.round(kopeks));
@@ -249,6 +259,7 @@
     currentLocalTime,
     makeLocalDateTime,
     parseMoneyToKopeks,
+    parseExpenseInput,
     formatMoney,
     formatDateRu,
     formatDateTimeRu,
